@@ -25,13 +25,22 @@
     <i class="fa-solid fa-house"></i><span class="sidebar-text">Overview</span>
   </a>
   <a
-    href="/dashboard"
+    href="https://api.ferdev.my.id/dashboard"
     class="sidebar-item"
-    class:active={activeCat === 'dash'}
-    data-cat="dash"
-    on:click|preventDefault={() => navigate('dash')}
+    target="_blank"
+    rel="noopener noreferrer"
   >
     <i class="fa-solid fa-dashboard"></i><span class="sidebar-text">Dashboard</span>
+    <i class="fa-solid fa-arrow-up-right-from-square sidebar-text" style="font-size: 10px; opacity: 0.6;"></i>
+  </a>
+  <a
+    href="https://status.ferdev.my.id"
+    class="sidebar-item"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <i class="fa-solid fa-server"></i><span class="sidebar-text">Server Status</span>
+    <i class="fa-solid fa-arrow-up-right-from-square sidebar-text" style="font-size: 10px; opacity: 0.6;"></i>
   </a>
   <div class="sidebar-divider"></div>
   <div class="sidebar-label">Categories</div>
@@ -50,4 +59,33 @@
       </a>
     {/each}
   </div>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-label">Information</div>
+    <a
+    href="https://api.ferdev.my.id/community"
+    class="sidebar-item"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <i class="fa-solid fa-user-group"></i><span class="sidebar-text">Community</span>
+    <i class="fa-solid fa-arrow-up-right-from-square sidebar-text" style="font-size: 10px; opacity: 0.6;"></i>
+  </a>
+    <a
+    href="https://whatsapp.com/channel/0029Vb6klqTKQuJDtbifsl1y"
+    class="sidebar-item"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <i class="fa-solid fa-screwdriver-wrench"></i><span class="sidebar-text">Changelog</span>
+    <i class="fa-solid fa-arrow-up-right-from-square sidebar-text" style="font-size: 10px; opacity: 0.6;"></i>
+  </a>
+    <a
+    href="https://tos.ferdev.my.id"
+    class="sidebar-item"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    <i class="fa-solid fa-scale-balanced"></i><span class="sidebar-text">Terms of Service</span>
+    <i class="fa-solid fa-arrow-up-right-from-square sidebar-text" style="font-size: 10px; opacity: 0.6;"></i>
+  </a>
 </nav>

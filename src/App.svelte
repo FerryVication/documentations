@@ -3,8 +3,9 @@
   import ApiCard from './components/ApiCard.svelte';
   import Sidebar from './components/Sidebar.svelte';
 
-  const CONFIG_URL = 'https://cdn.ferdev.my.id/assets/configure.json';
-  const BASE_URL = 'https://api.ferdev.my.id';
+  const CONFIG_URL = import.meta.env.VITE_CONFIG_URL;
+  const STATS_URL  = import.meta.env.VITE_STATS_URL;
+  const BASE_URL   = import.meta.env.VITE_BASE_URL;
   const MIN_SPLASH_MS = 1800;
 
   let status = 'loading';
@@ -20,6 +21,10 @@
   let toastMessage = '';
   let toastVisible = false;
   let themeWipeActive = false;
+
+  // Remote stats dari STATS_URL
+  let totalRequestsAllTime = null;
+  let averagePerDay = null;
 
   let toastTimer;
   let splashTimer;
@@ -40,6 +45,15 @@
 
   const isLightPreferred = () => window.matchMedia('(prefers-color-scheme: light)').matches;
   const isMobileViewport = () => window.innerWidth <= 768;
+
+  // Format angka besar: 3506083 → 3.5M, 18304 → 18.3K, dst.
+  function fmt(n) {
+    if (n === null || n === undefined) return '—';
+    if (typeof n !== 'number') return n;
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+    return n.toLocaleString('id-ID');
+  }
 
   function applyInitialTheme() {
     const savedTheme = localStorage.getItem('theme');
@@ -140,6 +154,20 @@
     return payload;
   }
 
+  async function fetchRemoteStats() {
+    try {
+      const res = await fetch(STATS_URL);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success) {
+        totalRequestsAllTime = data.totalRequestsAllTime;
+        averagePerDay = data.averagePerDay;
+      }
+    } catch (_) {
+      // silent fail — stats tidak kritis
+    }
+  }
+
   async function loadData() {
     status = 'loading';
     errorMessage = '';
@@ -206,6 +234,7 @@
   onMount(() => {
     applyInitialTheme();
     loadData();
+    fetchRemoteStats();
     handleScroll();
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', closeSidebar);
@@ -244,12 +273,14 @@
     { n: categoriesWithApis.length, l: 'Categories' },
     {
       n: allApis.filter((api) => String(api.method || '').toUpperCase() === 'GET').length,
-      l: 'GET Requests'
+      l: 'GET Endpoints'
     },
     {
       n: allApis.filter((api) => String(api.method || '').toUpperCase() === 'POST').length,
-      l: 'POST Requests'
-    }
+      l: 'POST Endpoints'
+    },
+    { n: totalRequestsAllTime, l: 'Total Requests', remote: true },
+    { n: averagePerDay, l: 'Daily', remote: true }
   ];
 
   $: normalizedSearch = searchTerm.trim().toLowerCase();
@@ -282,7 +313,7 @@
 {#if showSplash}
   <div id="splash" class:hide={splashHiding}>
     <div class="splash-logo">
-      <span>F</span><span>e</span><span>r</span><span class="accent">D</span><span>e</span><span>v</span>
+      <span>F</span><span>e</span><span>r</span><span>d</span><span>e</span><span>v</span><span class="accent">A</span><span class="accent">P</span><span class="accent">I</span>
     </div>
     <div class="splash-bar">
       <div class="splash-progress"></div>
@@ -313,37 +344,53 @@
       on:keydown={(event) => (event.key === 'Enter' || event.key === ' ') && closeSidebar()}
     ></div>
 
-    <header class="header" class:sidebar-collapsed={sidebarCollapsed}>
-      <div class="header-brand">
-        <button class="mobile-menu-btn" id="menuBtn" on:click={toggleSidebar}>
-          <i class="fa-solid fa-bars"></i>
-        </button>
-        <a href="#hero" class="logo" on:click|preventDefault={() => onNavigate({ detail: { slug: 'hero' } })}
-          >FER<span class="accent">DEV</span></a
-        >
-      </div>
-      <div class="header-left">
-        <div class="search-box">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input
-            type="text"
-            id="globalSearch"
-            placeholder="Search endpoints..."
-            autocomplete="off"
-            bind:value={searchTerm}
-          />
-        </div>
-      </div>
-      <div class="header-right">
-        <a href="https://api.ferdev.my.id/register" target="_blank" class="icon-btn" title="Get API Key">
-          <i class="fa-solid fa-key"></i>
-        </a>
-        <button class="theme-toggle" id="themeBtn" on:click={toggleTheme}>
-          <i class="fa-solid fa-sun icon-sun"></i>
-          <i class="fa-solid fa-moon icon-moon"></i>
-        </button>
-      </div>
-    </header>
+<header class="header" class:sidebar-collapsed={sidebarCollapsed}>
+  <div class="header-brand">
+    <button class="mobile-menu-btn" id="menuBtn" on:click={toggleSidebar}>
+  <i class="fa-solid" class:fa-bars={!sidebarOpen} class:fa-xmark={sidebarOpen}></i>
+</button>
+    <a
+      href="#hero"
+      class="logo"
+      on:click|preventDefault={() => onNavigate({ detail: { slug: 'hero' } })}
+    >
+      <img
+        src="https://cdn.ferdev.my.id/assets/img/brand_image.png"
+        alt="FerDev"
+        referrerpolicy="no-referrer"
+        style="height: 32px; width: auto; display: block;"
+        on:error={(e) => {
+          e.currentTarget.style.display = 'none';
+          e.currentTarget.nextElementSibling.style.display = 'inline';
+        }}
+      />
+      <span class="logo-fallback" style="display: none;">
+        FERDEV<span class="accent">API</span>
+      </span>
+    </a>
+  </div>
+  <div class="header-left">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input
+        type="text"
+        id="globalSearch"
+        placeholder="Search endpoints..."
+        autocomplete="off"
+        bind:value={searchTerm}
+      />
+    </div>
+  </div>
+  <div class="header-right">
+    <a href="https://api.ferdev.my.id/register" target="_blank" class="icon-btn" title="Get API Key">
+      <i class="fa-solid fa-key"></i>
+    </a>
+    <button class="theme-toggle" id="themeBtn" on:click={toggleTheme}>
+      <i class="fa-solid fa-sun icon-sun"></i>
+      <i class="fa-solid fa-moon icon-moon"></i>
+    </button>
+  </div>
+</header>
 
     <Sidebar
       categories={categoriesWithApis}
@@ -361,14 +408,79 @@
           Koleksi REST API yang lengkap. AI, Downloader, Search, Tools, dan banyak lagi. Semua dalam satu
           platform.
         </div>
+
+        <!-- Stats Cards -->
         <div class="hero-stats" id="heroStats">
           {#each stats as stat}
-            <div class="stat">
-              <div class="stat-num">{stat.n}</div>
+            <div class="stat" class:stat-remote={stat.remote}>
+              <div class="stat-num">
+                {#if stat.remote}
+                  {#if stat.n === null}
+                    <span class="stat-loading">
+                      <span class="stat-dot"></span>
+                      <span class="stat-dot"></span>
+                      <span class="stat-dot"></span>
+                    </span>
+                  {:else}
+                    {fmt(stat.n)}
+                  {/if}
+                {:else}
+                  {stat.n}
+                {/if}
+              </div>
               <div class="stat-label">{stat.l}</div>
             </div>
           {/each}
         </div>
+
+        <div class="usage-guide">
+  <div class="hero-label">
+    &#9632; Contoh Implementasi
+  </div>
+
+  <!-- POST Method -->
+  <div class="usage-method">
+    <div class="usage-method-header">
+      <span class="method-badge method-post">POST</span>
+      <span class="usage-method-desc">API Key dikirim via headers <code class="inline-code">Authorization Bearer</code>, parameter di <code class="inline-code">body</code> JSON</span>
+    </div>
+    <div class="code-block">
+      <div class="code-lang">JavaScript</div>
+      <pre class="code-pre"><span class="c-kw">const</span> <span class="c-var">response</span> <span class="c-op">=</span> <span class="c-kw">await</span> <span class="c-fn">fetch</span><span class="c-punc">(</span><span class="c-str">'https://api.ferdev.my.id/endpoint'</span><span class="c-punc">, &#123;</span>
+  <span class="c-prop">method</span><span class="c-op">:</span> <span class="c-str">'POST'</span><span class="c-punc">,</span>
+  <span class="c-prop">headers</span><span class="c-op">:</span> <span class="c-punc">&#123;</span>
+    <span class="c-str">'Content-Type'</span><span class="c-op">:</span> <span class="c-str">'application/json'</span><span class="c-punc">,</span>
+    <span class="c-str">'Authorization'</span><span class="c-op">:</span> <span class="c-str">'Bearer </span><span class="c-key">YOUR_API_KEY</span><span class="c-str">'</span>
+  <span class="c-punc">&#125;,</span>
+  <span class="c-prop">body</span><span class="c-op">:</span> <span class="c-fn">JSON</span><span class="c-op">.</span><span class="c-fn">stringify</span><span class="c-punc">(&#123;</span>
+    <span class="c-prop">prompt</span><span class="c-op">:</span> <span class="c-str">'Halo, siapa kamu?'</span>
+  <span class="c-punc">&#125;)</span>
+<span class="c-punc">&#125;);</span>
+
+<span class="c-kw">const</span> <span class="c-var">data</span> <span class="c-op">=</span> <span class="c-kw">await</span> <span class="c-var">response</span><span class="c-op">.</span><span class="c-fn">json</span><span class="c-punc">();</span>
+<span class="c-fn">console</span><span class="c-op">.</span><span class="c-fn">log</span><span class="c-punc">(</span><span class="c-var">data</span><span class="c-punc">);</span></pre>
+    </div>
+  </div>
+
+  <!-- GET Method -->
+  <div class="usage-method">
+    <div class="usage-method-header">
+      <span class="method-badge method-get">GET</span>
+      <span class="usage-method-desc">API Key dan parameter dikirim langsung sebagai <code class="inline-code">query string</code> di URL</span>
+    </div>
+    <div class="code-block">
+      <div class="code-lang">JavaScript</div>
+      <pre class="code-pre"><span class="c-kw">const</span> <span class="c-var">response</span> <span class="c-op">=</span> <span class="c-kw">await</span> <span class="c-fn">fetch</span><span class="c-punc">(</span>
+  <span class="c-str">'https://api.ferdev.my.id/endpoint?param=value&amp;apikey=</span><span class="c-key">YOUR_API_KEY</span><span class="c-str">'</span>
+<span class="c-punc">);</span>
+
+<span class="c-kw">const</span> <span class="c-var">data</span> <span class="c-op">=</span> <span class="c-kw">await</span> <span class="c-var">response</span><span class="c-op">.</span><span class="c-fn">json</span><span class="c-punc">();</span>
+<span class="c-fn">console</span><span class="c-op">.</span><span class="c-fn">log</span><span class="c-punc">(</span><span class="c-var">data</span><span class="c-punc">);</span></pre>
+    </div>
+  </div>
+</div>
+        <!-- /Cara Penggunaan API -->
+
       </div>
 
       <div id="content">
