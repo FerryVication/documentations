@@ -1533,7 +1533,7 @@ code {
 [data-theme="light"] .usage-method-desc {
     color: #475569;
 }
-:[data-theme="light"] .usage-title {
+[data-theme="light"] .usage-title {
     color: #475569;
 }
 [data-theme="light"] .stat-remote .stat-num {
