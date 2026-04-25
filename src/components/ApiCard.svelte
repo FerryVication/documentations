@@ -18,6 +18,7 @@
   let paramsSignature = '';
 
   $: method = (api?.method || 'GET').toUpperCase();
+  $: isActive = String(api?.isAktif ?? true);
   $: params = Array.isArray(api?.parameters) ? api.parameters : [];
   $: {
     const nextSignature = params
@@ -143,7 +144,7 @@
           type: 'image',
           imageUrl: responseImageUrl
         };
-      } else if (contentType.includes('json')) {
+      }  else if (contentType.includes('json')) {
         const json = await res.json();
         response = {
           visible: true,
@@ -152,7 +153,19 @@
           type: 'html',
           html: syntaxHighlight(JSON.stringify(json, null, 2))
         };
-      } else {
+      }  else if (contentType.includes('video')) {
+  const blob = await res.blob();
+  const videoUrl = URL.createObjectURL(blob);
+
+  response = {
+    visible: true,
+    badge: `${res.status} ${res.ok ? 'OK' : 'Error'}`,
+    badgeClass: res.ok ? 'status-ok' : 'status-err',
+    type: 'video',
+    videoUrl: videoUrl
+  };
+
+  } else {
         const text = await res.text();
         response = {
           visible: true,
@@ -235,7 +248,7 @@
   >
     <span class={`card-method method-${method}`}>{method}</span>
     <div class="card-info">
-      <div class="card-title"><span class="card-status-dot"></span>{api.title}</div>
+      <div class="card-title"><span class={`card-status-dot-${isActive}`}></span>{api.title}</div>
       <div class="card-endpoint">{baseUrl}{api.endpointPath}</div>
       <div class="card-desc">{api.description || ''}</div>
     </div>
@@ -311,10 +324,30 @@
                 <span class={`response-status ${response.badgeClass}`}>{response.badge}</span>
               {/if}
             </div>
-            {#if response.type === 'image'}
-              <img src={response.imageUrl} class="response-img" alt="Response" />
+            {#if response.type === 'image' || response.type === 'gif'}
+              <img
+                src={response.imageUrl}
+                class="response-img"
+                alt="Response"
+              />
+            
+            {:else if response.type === 'video'}
+              <video
+                class="response-video"
+                controls
+                autoplay
+                loop
+                muted
+                playsinline
+                aria-label="Animated preview"
+              >
+                <source src={response.videoUrl} />
+                Browser not supported.
+              </video>
             {:else}
-              <div class="response-body">{@html response.html}</div>
+              <div class="response-body">
+                {@html response.html}
+              </div>
             {/if}
           {/if}
         </div>

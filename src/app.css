@@ -909,6 +909,7 @@ body {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
+    margin-bottom: 15px;
     padding: 7px 10px;
     color: var(--text);
     font-family: "Fira Code", monospace;
@@ -1100,14 +1101,14 @@ body {
 
 .stat-num {
     font-family: "Bebas Neue", sans-serif;
-    font-size: 30px;
+    font-size: 25px;
     letter-spacing: 1px;
     color: var(--text);
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
     letter-spacing: 0.5px;
 }
@@ -1216,17 +1217,52 @@ html.theme-transition::view-transition-old(root) {
     }
 }
 
-.card-status-dot {
+.card-status-dot-true,
+.card-status-dot-false {
     display: inline-block;
     width: 6px;
     height: 6px;
     border-radius: 50%;
+    margin-right: 8px;
+    animation: pulseDot 1.4s infinite ease-in-out;
+}
+
+.card-status-dot-true {
     background: var(--get);
-    margin-right: 6px;
     box-shadow: 0 0 0 2px var(--get-bg);
 }
 
-.response-img {
+.card-status-dot-false {
+    background: #d60505;
+    box-shadow: 0 0 0 2px rgba(214, 5, 5, 0.15);
+}
+
+@keyframes pulseDot {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.7);
+        opacity: 0.45;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.card-status-dot-true {
+    animation-duration: 0.8s;
+}
+
+.card-status-dot-false {
+    animation-duration: 1.8s;
+}
+
+.response-img, .response-video {
     max-width: 100%;
     border-radius: 4px;
     margin-top: 8px;
