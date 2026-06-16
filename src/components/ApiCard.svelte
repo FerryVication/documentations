@@ -28,7 +28,12 @@
       paramsSignature = nextSignature;
       const nextValues = {};
       for (const param of params) {
-        nextValues[param.name] = param.defaultValue ?? '';
+        if (param.name.toLowerCase() === 'apikey' || param.name.toLowerCase() === 'api_key') {
+          const savedKey = typeof window !== 'undefined' ? localStorage.getItem('saved_apikey') : null;
+          nextValues[param.name] = savedKey ?? param.defaultValue ?? '';
+        } else {
+          nextValues[param.name] = param.defaultValue ?? '';
+        }
       }
       formValues = nextValues;
     }
@@ -36,6 +41,12 @@
 
   function updateParam(name, value) {
     formValues = { ...formValues, [name]: value };
+    if (name.toLowerCase() === 'apikey' || name.toLowerCase() === 'api_key') {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('saved_apikey', value);
+        window.dispatchEvent(new CustomEvent('apikey_changed', { detail: value }));
+      }
+    }
   }
 
   function toggleCard() {
@@ -210,6 +221,19 @@
   }
 
   onMount(() => {
+    const handleApiKeyChange = (event) => {
+      const newKey = event.detail;
+      for (const param of params) {
+        if (param.name.toLowerCase() === 'apikey' || param.name.toLowerCase() === 'api_key') {
+          formValues = { ...formValues, [param.name]: newKey };
+        }
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('apikey_changed', handleApiKeyChange);
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -224,7 +248,12 @@
 
     if (cardEl) observer.observe(cardEl);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('apikey_changed', handleApiKeyChange);
+      }
+    };
   });
 
   onDestroy(() => {

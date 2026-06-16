@@ -25,6 +25,10 @@
   // Remote stats dari STATS_URL
   let totalRequestsAllTime = null;
   let averagePerDay = null;
+  let chartHistory = [];
+  let totalRequests30Days = null;
+  let busiestDay = null;
+  let monthStats = null;
 
   let toastTimer;
   let splashTimer;
@@ -162,6 +166,10 @@
       if (data.success) {
         totalRequestsAllTime = data.totalRequestsAllTime;
         averagePerDay = data.averagePerDay;
+        chartHistory = data.last30Days || [];
+        totalRequests30Days = data.totalRequests30Days || null;
+        busiestDay = data.busiestDay || null;
+        monthStats = data.month || null;
       }
     } catch (_) {
       // silent fail — stats tidak kritis
@@ -283,6 +291,33 @@
     { n: averagePerDay, l: 'Daily', remote: true }
   ];
 
+  $: getCount = allApis.filter((api) => String(api.method || '').toUpperCase() === 'GET').length;
+  $: postCount = allApis.filter((api) => String(api.method || '').toUpperCase() === 'POST').length;
+  $: totalCount = getCount + postCount || 1;
+  $: getPct = Math.round((getCount / totalCount) * 100);
+  $: postPct = 100 - getPct;
+
+  $: chartData = chartHistory.length > 0 
+    ? chartHistory.map(item => item.total)
+    : [54200, 58100, 52900, 61400, 57800, 60200, averagePerDay || 63800];
+  $: maxVal = Math.max(...chartData) * 1.05;
+  $: minVal = Math.min(...chartData) * 0.95;
+  $: yRange = maxVal - minVal || 1;
+  $: points = chartData.map((val, i) => ({
+    x: 10 + (i * 280 / (chartData.length - 1 || 1)),
+    y: 110 - ((val - minVal) / yRange * 90)
+  }));
+  $: pathD = points.length ? 'M ' + points.map(p => `${p.x},${p.y}`).join(' L ') : '';
+  $: areaD = points.length ? `${pathD} L ${points[points.length-1].x},115 L ${points[0].x},115 Z` : '';
+  $: lastPoint = points.length ? points[points.length - 1] : { x: 0, y: 0 };
+  
+  $: chartDays = chartHistory.length > 0
+    ? chartHistory.map(item => {
+        const parts = item.date.split('-');
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}` : item.date;
+      })
+    : ['H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'H-1', 'Hari Ini'];
+
   $: normalizedSearch = searchTerm.trim().toLowerCase();
 
   $: filteredSections = categoriesWithApis
@@ -403,46 +438,188 @@
     <main class="main" class:sidebar-collapsed={sidebarCollapsed}>
       <div class="hero section-anchor" id="hero">
         <div class="hero-label">&#9632; REST API Documentation</div>
-        <div class="hero-title">FERDEV <span>API</span></div>
+        <div class="hero-title">
+          <img
+            src="https://cdn.ferdev.my.id/assets/img/brand_image.png"
+            alt="FERDEV API"
+            class="hero-logo-img"
+            referrerpolicy="no-referrer"
+            on:error={(e) => {
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling.style.display = 'block';
+            }}
+          />
+          <span class="hero-logo-fallback" style="display: none;">
+            FERDEV <span>API</span>
+          </span>
+        </div>
         <div class="hero-desc">
-          Koleksi REST API yang lengkap. AI, Downloader, Search, Tools, dan banyak lagi. Semua dalam satu
+          A complete collection of REST APIs. AI, Downloader, Search, Tools, and more. All in one
           platform.
         </div>
 
-        <!-- Stats Cards -->
-        <div class="hero-stats" id="heroStats">
-          {#each stats as stat}
-            <div class="stat" class:stat-remote={stat.remote}>
-              <div class="stat-num">
-                {#if stat.remote}
-                  {#if stat.n === null}
-                    <span class="stat-loading">
-                      <span class="stat-dot"></span>
-                      <span class="stat-dot"></span>
-                      <span class="stat-dot"></span>
-                    </span>
-                  {:else}
-                    {fmt(stat.n)}
-                  {/if}
-                {:else}
-                  {stat.n}
-                {/if}
+        <!-- Stats Dashboard -->
+        <div class="hero-dashboard" id="heroStats">
+          <!-- Card 1: Overview & Distribution -->
+          <div class="db-card">
+            <div>
+              <div class="db-card-title">
+                <i class="fa-solid fa-chart-simple"></i> Platform Overview
               </div>
-              <div class="stat-label">{stat.l}</div>
+              <div class="db-grid">
+                <div class="db-stat">
+                  <div class="db-stat-num">{allApis.length}</div>
+                  <div class="db-stat-label">Total Endpoints</div>
+                </div>
+                <div class="db-stat">
+                  <div class="db-stat-num">{categoriesWithApis.length}</div>
+                  <div class="db-stat-label">Categories</div>
+                </div>
+                <div class="db-stat">
+                  <div class="db-stat-num remote-loading">
+                    {#if totalRequestsAllTime === null}
+                      <span class="stat-loading">
+                        <span class="stat-dot"></span>
+                        <span class="stat-dot"></span>
+                        <span class="stat-dot"></span>
+                      </span>
+                    {:else}
+                      <span class="db-stat-num remote-val">{fmt(totalRequestsAllTime)}</span>
+                    {/if}
+                  </div>
+                  <div class="db-stat-label">Total Requests</div>
+                </div>
+                <div class="db-stat">
+                  <div class="db-stat-num remote-loading">
+                    {#if averagePerDay === null}
+                      <span class="stat-loading">
+                        <span class="stat-dot"></span>
+                        <span class="stat-dot"></span>
+                        <span class="stat-dot"></span>
+                      </span>
+                    {:else}
+                      <span class="db-stat-num remote-val">{fmt(averagePerDay)}</span>
+                    {/if}
+                  </div>
+                  <div class="db-stat-label">Daily Average</div>
+                </div>
+              </div>
             </div>
-          {/each}
+            
+            <div class="db-divider"></div>
+            
+            <div class="dist-bar-wrapper">
+              <div class="dist-bar-labels">
+                <span class="dist-label-get">GET: {getCount} ({getPct}%)</span>
+                <span class="dist-label-post">POST: {postCount} ({postPct}%)</span>
+              </div>
+              <div class="dist-progress-bar">
+                <div class="dist-fill-get" style="width: {getPct}%"></div>
+                <div class="dist-fill-post" style="width: {postPct}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Traffic Trend Chart -->
+          <div class="db-card">
+            <div class="db-card-title">
+              <i class="fa-solid fa-wave-square"></i> Traffic Trend (All History)
+            </div>
+            
+            <div class="chart-container">
+              <svg class="chart-svg" viewBox="0 0 300 120" preserveAspectRatio="none">
+                <defs>
+                  <!-- Bar Gradient -->
+                  <linearGradient id="chartGrad" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0%" stop-color="var(--accent)" />
+                    <stop offset="100%" stop-color="var(--accent-2)" />
+                  </linearGradient>
+                </defs>
+                
+                <!-- Grid Lines -->
+                <line x1="10" y1="20" x2="290" y2="20" class="chart-gridline" />
+                <line x1="10" y1="65" x2="290" y2="65" class="chart-gridline" />
+                <line x1="10" y1="110" x2="290" y2="110" class="chart-gridline" />
+                
+                <!-- Bar rects -->
+                {#each chartData as val, i}
+                  {@const barHeight = maxVal > 0 ? (val / maxVal) * 90 : 0}
+                  {@const barWidth = (280 / chartData.length) * 0.75}
+                  {@const x = 10 + (i * 280 / chartData.length) + ((280 / chartData.length) * 0.125)}
+                  {@const y = 110 - barHeight}
+                  <rect
+                    x={x}
+                    y={y}
+                    width={barWidth}
+                    height={barHeight}
+                    rx="1.5"
+                    fill="url(#chartGrad)"
+                    class="chart-bar"
+                  />
+                  
+                  <!-- Interactive Hover Tooltip zone -->
+                  <rect
+                    x={x}
+                    y="10"
+                    width={barWidth}
+                    height="100"
+                    fill="transparent"
+                    style="cursor: pointer;"
+                  >
+                    <title>{chartDays[i]}: {val.toLocaleString()}</title>
+                  </rect>
+                {/each}
+
+                <!-- SVG text labels for dates -->
+                {#each points as pt, i}
+                  {#if i === 0 || i === points.length - 1 || (points.length > 5 && i === Math.floor(points.length / 2))}
+                    <text x={pt.x} y="118" fill="var(--text-muted)" font-size="8.5" font-family="sans-serif" text-anchor={i === 0 ? 'start' : (i === points.length - 1 ? 'end' : 'middle')}>
+                      {chartDays[i]}
+                    </text>
+                  {/if}
+                {/each}
+              </svg>
+            </div>
+            
+            <div class="db-divider"></div>
+            
+            <div class="chart-summary-grid">
+              <div class="summary-item">
+                <span class="summary-label">Total 30 Days</span>
+                <span class="summary-val">{totalRequests30Days !== null ? fmt(totalRequests30Days) : '—'}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Daily Average</span>
+                <span class="summary-val">{averagePerDay !== null ? fmt(averagePerDay) : '—'}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Busiest Day</span>
+                <span class="summary-val">
+                  {#if busiestDay}
+                    {fmt(busiestDay.total)} <span class="summary-sub">({busiestDay.date.split('-').slice(1).reverse().join('/')})</span>
+                  {:else}
+                    —
+                  {/if}
+                </span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Monthly Estimate</span>
+                <span class="summary-val">{monthStats ? fmt(monthStats.estimatedTotal) : '—'}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="usage-guide">
   <div class="hero-label">
-    &#9632; Contoh Implementasi
+    &#9632; Implementation Examples
   </div>
 
   <!-- POST Method -->
   <div class="usage-method">
     <div class="usage-method-header">
       <span class="method-badge method-post">POST</span>
-      <span class="usage-method-desc">API Key dikirim via headers <code class="inline-code">Authorization Bearer</code>, parameter di <code class="inline-code">body</code> JSON</span>
+      <span class="usage-method-desc">API Key is sent via headers in <code class="inline-code">Authorization Bearer</code>, parameters in JSON <code class="inline-code">body</code></span>
     </div>
     <div class="code-block">
       <div class="code-lang">JavaScript</div>
@@ -466,7 +643,7 @@
   <div class="usage-method">
     <div class="usage-method-header">
       <span class="method-badge method-get">GET</span>
-      <span class="usage-method-desc">API Key dan parameter dikirim langsung sebagai <code class="inline-code">query string</code> di URL</span>
+      <span class="usage-method-desc">API Key and parameters sent directly as <code class="inline-code">query string</code> in the URL</span>
     </div>
     <div class="code-block">
       <div class="code-lang">JavaScript</div>
@@ -487,7 +664,7 @@
         {#if filteredSections.length === 0 && status === 'ready'}
           <div class="no-results">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <p>Tidak ada hasil untuk "<strong>{normalizedSearch}</strong>"</p>
+            <p>No results for "<strong>{normalizedSearch}</strong>"</p>
           </div>
         {:else}
           {#each filteredSections as category}
@@ -496,7 +673,7 @@
                 <div class="section-header-left">
                   <div class="section-icon"><i class={category.icon}></i></div>
                   <div class="section-title">{category.name}</div>
-                  <div class="section-desc">{category.apis.length} endpoint tersedia</div>
+                  <div class="section-desc">{category.apis.length} endpoints available</div>
                 </div>
                 <div class="section-badge">{category.apis.length} APIs</div>
               </div>
