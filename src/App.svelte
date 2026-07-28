@@ -390,7 +390,7 @@
       on:click|preventDefault={() => onNavigate({ detail: { slug: 'hero' } })}
     >
       <img
-        src="https://cdn.ferdev.my.id/assets/img/brand_image.png"
+        src="https://cdn.ferdev.me/assets/img/brand_image.png"
         alt="FerDev"
         referrerpolicy="no-referrer"
         style="height: 32px; width: auto; display: block;"
@@ -417,7 +417,7 @@
     </div>
   </div>
   <div class="header-right">
-    <a href="https://api.ferdev.my.id/register" target="_blank" class="icon-btn" title="Get API Key">
+    <a href="https://api.ferdev.me/register" target="_blank" class="icon-btn" title="Get API Key">
       <i class="fa-solid fa-key"></i>
     </a>
     <button class="theme-toggle" id="themeBtn" on:click={toggleTheme}>
@@ -440,7 +440,7 @@
         <div class="hero-label">&#9632; REST API Documentation</div>
         <div class="hero-title">
           <img
-            src="https://cdn.ferdev.my.id/assets/img/brand_image.png"
+            src="https://cdn.ferdev.me/assets/img/brand_image.png"
             alt="FERDEV API"
             class="hero-logo-img"
             referrerpolicy="no-referrer"
@@ -623,7 +623,7 @@
     </div>
     <div class="code-block">
       <div class="code-lang">JavaScript</div>
-      <pre class="code-pre"><span class="c-kw">const</span> <span class="c-var">response</span> <span class="c-op">=</span> <span class="c-kw">await</span> <span class="c-fn">fetch</span><span class="c-punc">(</span><span class="c-str">'https://api.ferdev.my.id/endpoint'</span><span class="c-punc">, &#123;</span>
+      <pre class="code-pre"><span class="c-kw">const</span> <span class="c-var">response</span> <span class="c-op">=</span> <span class="c-kw">await</span> <span class="c-fn">fetch</span><span class="c-punc">(</span><span class="c-str">'https://api.ferdev.me/endpoint'</span><span class="c-punc">, &#123;</span>
   <span class="c-prop">method</span><span class="c-op">:</span> <span class="c-str">'POST'</span><span class="c-punc">,</span>
   <span class="c-prop">headers</span><span class="c-op">:</span> <span class="c-punc">&#123;</span>
     <span class="c-str">'Content-Type'</span><span class="c-op">:</span> <span class="c-str">'application/json'</span><span class="c-punc">,</span>
@@ -648,7 +648,7 @@
     <div class="code-block">
       <div class="code-lang">JavaScript</div>
       <pre class="code-pre"><span class="c-kw">const</span> <span class="c-var">response</span> <span class="c-op">=</span> <span class="c-kw">await</span> <span class="c-fn">fetch</span><span class="c-punc">(</span>
-  <span class="c-str">'https://api.ferdev.my.id/endpoint?param=value&amp;apikey=</span><span class="c-key">YOUR_API_KEY</span><span class="c-str">'</span>
+  <span class="c-str">'https://api.ferdev.me/endpoint?param=value&amp;apikey=</span><span class="c-key">YOUR_API_KEY</span><span class="c-str">'</span>
 <span class="c-punc">);</span>
 
 <span class="c-kw">const</span> <span class="c-var">data</span> <span class="c-op">=</span> <span class="c-kw">await</span> <span class="c-var">response</span><span class="c-op">.</span><span class="c-fn">json</span><span class="c-punc">();</span>
