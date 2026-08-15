@@ -25,7 +25,7 @@
     <i class="fa-solid fa-house"></i><span class="sidebar-text">Overview</span>
   </a>
   <a
-    href="https://api.ferdev.my.id/dashboard"
+    href="https://api.ferdev.me/dashboard"
     class="sidebar-item"
     target="_blank"
     rel="noopener noreferrer"
@@ -34,7 +34,7 @@
     <i class="fa-solid fa-arrow-up-right-from-square sidebar-text" style="font-size: 10px; opacity: 0.6;"></i>
   </a>
   <a
-    href="https://status.ferdev.my.id"
+    href="https://status.ferdev.me"
     class="sidebar-item"
     target="_blank"
     rel="noopener noreferrer"
@@ -62,7 +62,7 @@
   <div class="sidebar-divider"></div>
   <div class="sidebar-label">Information</div>
     <a
-    href="https://api.ferdev.my.id/community"
+    href="https://api.ferdev.me/community"
     class="sidebar-item"
     target="_blank"
     rel="noopener noreferrer"
@@ -80,7 +80,7 @@
     <i class="fa-solid fa-arrow-up-right-from-square sidebar-text" style="font-size: 10px; opacity: 0.6;"></i>
   </a>
     <a
-    href="https://tos.ferdev.my.id"
+    href="https://tos.ferdev.me"
     class="sidebar-item"
     target="_blank"
     rel="noopener noreferrer"
